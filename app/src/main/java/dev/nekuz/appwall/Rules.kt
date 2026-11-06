@@ -1,6 +1,7 @@
 package dev.nekuz.appwall
 
 import android.content.Context
+import android.content.pm.PackageManager
 
 object Rules {
     private const val FILE = "rules"
@@ -17,6 +18,15 @@ object Rules {
         if (blocked) updated.add(packageName) else updated.remove(packageName)
         prefs(context).edit().putStringSet(KEY_BLOCKED, updated).apply()
     }
+
+    fun installedCount(context: Context, packages: Set<String>): Int {
+        val manager = context.packageManager
+        return countInstalled(packages) { name ->
+            runCatching { manager.getApplicationInfo(name, PackageManager.MATCH_DISABLED_COMPONENTS) }.isSuccess
+        }
+    }
+
+    fun countInstalled(packages: Set<String>, isInstalled: (String) -> Boolean): Int = packages.count(isInstalled)
 
     fun isEnabled(context: Context): Boolean = prefs(context).getBoolean(KEY_ENABLED, false)
 

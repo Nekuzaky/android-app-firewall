@@ -13,6 +13,20 @@
         <item quantity="one">%d app blocked</item>
         <item quantity="other">%d apps blocked</item>
     </plurals>
+    <plurals name="rules_saved">
+        <item quantity="one">%d rule saved, not enforced</item>
+        <item quantity="other">%d rules saved, not enforced</item>
+    </plurals>
+    <plurals name="rules_saved_other_vpn">
+        <item quantity="one">Another VPN is active. %d rule saved, not enforced</item>
+        <item quantity="other">Another VPN is active. %d rules saved, not enforced</item>
+    </plurals>
+    <string name="channel_status">Firewall status</string>
+    <string name="channel_alerts">Firewall alerts</string>
+    <string name="notification_on_title">AppWall is on</string>
+    <string name="notification_on_text">Blocked apps have no Internet access.</string>
+    <string name="notification_off_title">AppWall is off</string>
+    <string name="notification_off_text">Blocked apps have Internet access. Tap to open.</string>
     <string name="action_turn_on">Turn on</string>
     <string name="action_turn_off">Turn off</string>
     <string name="search_hint">Search apps</string>
@@ -27,5 +41,5 @@
     <string name="log_dns_lookup">%1$s (DNS lookup)</string>
     <string name="log_note">Stored in memory only and erased when the firewall restarts.</string>
 
-    <string name="info_message">AppWall cuts Internet access for the apps you choose. It has no Internet permission and no ads or analytics.\n\nOnly blocked apps go through its local VPN, where their traffic is dropped. All other apps bypass it, so AppWall never sees their traffic.\n\nIt lists connection attempts from blocked apps. It cannot show where allowed apps connect.\n\nIf AppWall stops, blocked apps get their Internet access back. It restarts after a phone restart or an update. Only one VPN can run per profile, and each work profile needs its own copy of AppWall.\n\nDo not turn on \"Block connections without VPN\" for AppWall: it would cut the network for every app.</string>
+    <string name="info_message">AppWall cuts Internet access for the apps you choose. It has no Internet permission and no ads or analytics.\n\nOnly blocked apps go through its local VPN, where their traffic is dropped. All other apps bypass it, so AppWall never sees their traffic.\n\nIt lists connection attempts from blocked apps. It cannot show where allowed apps connect.\n\nIf AppWall stops, blocked apps get their Internet access back. It restarts after a phone restart or an update, but blocked apps have Internet access from power-on until after your first unlock, plus the time AppWall takes to start. Blocking or unblocking an app also leaves a very short gap while Android rebuilds the VPN.\n\nOnly one VPN can run per profile, so starting another VPN turns AppWall off. Each work profile needs its own copy of AppWall.\n\nA blocked app can still get data through other apps or system services, such as a browser it opens, a download service or push notifications.\n\nDo not turn on \"Block connections without VPN\" for AppWall: it would cut the network for every app.</string>
 </resources>

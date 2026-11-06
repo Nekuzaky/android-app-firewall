@@ -4,10 +4,15 @@ import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.net.VpnService
+import android.os.Build
 import android.os.Bundle
 import android.os.Process
 import android.text.Editable
@@ -72,18 +77,26 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         blocked = Rules.blocked(this)
-        if (Rules.isEnabled(this) && !FirewallService.running && VpnService.prepare(this) == null) {
-            startFirewall()
-        }
+        reconcile()
         renderStatus()
         load()
+    }
+
+    private fun reconcile() {
+        if (!Rules.isEnabled(this)) return
+        if (FirewallService.running) {
+            FirewallService.reapply(this)
+        } else if (!FirewallService.otherVpnActive(this) && VpnService.prepare(this) == null) {
+            FirewallService.start(this)
+            toggleButton.postDelayed({ renderStatus() }, STATUS_REFRESH_MILLIS)
+        }
     }
 
     private fun load() {
         val current = ++generation
         if (!loaded) progress.visibility = View.VISIBLE
         thread {
-            val apps = queryApps()
+            val apps = runCatching { queryApps() }.getOrDefault(emptyList())
             runOnUiThread {
                 if (isDestroyed || current != generation) return@runOnUiThread
                 allApps = apps
@@ -107,10 +120,23 @@ class MainActivity : Activity() {
                 packageManager.checkPermission(Manifest.permission.INTERNET, it.packageName) ==
                     PackageManager.PERMISSION_GRANTED
             }
-            .map { App(it.loadLabel(packageManager).toString(), it.packageName, it.loadIcon(packageManager)) }
+            .mapNotNull { info -> runCatching { toApp(info) }.getOrNull() }
             .sortedBy { it.label.lowercase() }
             .toList()
     }
+
+    private fun toApp(info: ApplicationInfo): App {
+        val label = runCatching { info.loadLabel(packageManager) }.getOrNull()
+        return App(Labels.clean(label, info.packageName), info.packageName, renderIcon(info))
+    }
+
+    private fun renderIcon(info: ApplicationInfo): Drawable = runCatching {
+        val source = info.loadIcon(packageManager)
+        val bitmap = Bitmap.createBitmap(ICON_SIZE_PX, ICON_SIZE_PX, Bitmap.Config.ARGB_8888)
+        source.setBounds(0, 0, ICON_SIZE_PX, ICON_SIZE_PX)
+        source.draw(Canvas(bitmap))
+        BitmapDrawable(resources, bitmap)
+    }.getOrElse { packageManager.defaultActivityIcon }
 
     private fun applyFilter() {
         val query = search.text.toString().trim()
@@ -129,7 +155,13 @@ class MainActivity : Activity() {
     private fun renderStatus() {
         val on = FirewallService.running
         statusTitle.setText(if (on) R.string.status_on else R.string.status_off)
-        statusSubtitle.text = resources.getQuantityString(R.plurals.blocked_count, blocked.size, blocked.size)
+        val count = Rules.installedCount(this, blocked)
+        val subtitle = when {
+            on -> R.plurals.blocked_count
+            Rules.isEnabled(this) && FirewallService.otherVpnActive(this) -> R.plurals.rules_saved_other_vpn
+            else -> R.plurals.rules_saved
+        }
+        statusSubtitle.text = resources.getQuantityString(subtitle, count, count)
         toggleButton.setText(if (on) R.string.action_turn_off else R.string.action_turn_on)
     }
 
@@ -137,7 +169,7 @@ class MainActivity : Activity() {
         val nowBlocked = app.packageName !in blocked
         Rules.setBlocked(this, app.packageName, nowBlocked)
         blocked = Rules.blocked(this)
-        if (FirewallService.running) FirewallService.start(this)
+        FirewallService.reapply(this)
         renderStatus()
         (list.adapter as BaseAdapter).notifyDataSetChanged()
     }
@@ -158,7 +190,14 @@ class MainActivity : Activity() {
     }
 
     private fun startFirewall() {
-        FirewallService.start(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATIONS)
+        }
+        if (!FirewallService.start(this)) {
+            Toast.makeText(this, R.string.start_refused, Toast.LENGTH_LONG).show()
+        }
         toggleButton.postDelayed({ renderStatus() }, STATUS_REFRESH_MILLIS)
     }
 
@@ -199,6 +238,8 @@ class MainActivity : Activity() {
 
     private companion object {
         const val REQUEST_VPN = 1
+        const val REQUEST_NOTIFICATIONS = 2
+        const val ICON_SIZE_PX = 96
         const val STATUS_REFRESH_MILLIS = 400L
     }
 }

@@ -58,6 +58,9 @@ This design is why AppWall needs no Internet permission.
 | Permission | Why it is needed |
 | --- | --- |
 | `RECEIVE_BOOT_COMPLETED` | Turn the firewall back on after a phone restart |
+| `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_SPECIAL_USE` | Keep the firewall running, with an ongoing notification while it is on |
+| `POST_NOTIFICATIONS` | Show that notification, and warn you when the firewall turns off or cannot restart |
+| `ACCESS_NETWORK_STATE` | Detect another active VPN, so that AppWall does not take over from it on its own |
 | `BIND_VPN_SERVICE` | Held by Android only, so that only the system can bind the firewall service |
 
 App visibility is limited to apps with a launcher icon through a `<queries>` declaration, instead of `QUERY_ALL_PACKAGES`.
@@ -124,7 +127,7 @@ JAVA_HOME=/path/to/jdk-21 ./gradlew testDebugUnitTest
 ## Usage
 
 1. Open AppWall and tap the switch next to each app you want to block.
-2. Tap **Turn on** and allow the VPN connection request from Android.
+2. Tap **Turn on**, allow the VPN connection request from Android, and allow notifications so that AppWall can warn you when it turns off.
 3. Open **Blocked attempts** to see what blocked apps try to reach.
 
 Android shows a VPN icon while the firewall runs. This is expected: no traffic leaves your phone through AppWall.
@@ -132,21 +135,28 @@ Android shows a VPN icon while the firewall runs. This is expected: no traffic l
 ## Limitations
 
 - **Blocking stops when AppWall stops.** If the app is killed, blocked apps get their Internet access back.
-- **Short gap after a restart.** On the test device, the firewall came back 30 to 60 seconds after startup, and blocked apps are not protected during that time.
+- **Short gap when rules change.** Android rebuilds the VPN each time you block or unblock an app. In a test, 2 of 60 connection attempts from an already blocked app got through during 8 rule changes. Opening the app without changing a rule did not rebuild the VPN and let nothing through.
+- **Gap after a restart.** AppWall cannot start until the first unlock. Blocked apps have Internet access from power-on until after that unlock, plus the startup delay, which was 30 to 60 seconds on the test device.
+- **No warning without the notification permission.** If you refuse notifications or turn them off, the only sign that the firewall is off is inside the app.
 - **Do not use "Block connections without VPN".** This Android setting would cut the network for every app that is not in the VPN.
-- **One VPN per profile.** AppWall cannot run with another VPN in the same profile.
+- **One VPN per profile.** AppWall cannot run with another VPN in the same profile. Starting another VPN turns AppWall off and posts a notification. It stays off until you turn it back on.
 - **One copy per profile.** Rules apply to one profile only, so a work profile needs its own copy of AppWall.
-- **System services are not covered.** An app can still get data through a service that runs under another identity, such as a system download service or push notifications.
+- **System services and other apps are not covered.** An app can still get data through something that runs under another identity, such as a system download service, push notifications, a browser it opens, or an allowed app that cooperates with it.
 - **Only apps with a launcher icon are listed.** Background-only apps cannot be selected.
 - **Battery and manufacturer limits.** Some Android skins restrict background apps, which may stop the firewall or prevent its restart.
 - **Changing the signing key is disruptive.** A build signed with a different key must replace the app, which erases its rules.
 
 ## Test status
 
-Tested on one device: Oppo Reno4 Z 5G (CPH2065) with Android 12 and ColorOS.
+Tested on one device: Oppo Reno4 Z 5G (CPH2065) with Android 12 and ColorOS. The rows marked "1.0.1" were run on the current version. The other rows were run on version 1.0.0.
 
 | Scenario | Status |
 | --- | --- |
+| Blocked test app stays blocked, allowed test app connects | Works, 1.0.1 |
+| Blocked app uninstalled and reinstalled, AppWall not opened | Stays blocked, 1.0.1 |
+| Another VPN starts | AppWall turns off and posts a notification, 1.0.1 |
+| App with a 6000x6000 icon and app with a long label containing a bidi character | No crash, 1.0.1 |
+| 2,000 random input events | No crash, no ANR, 1.0.1 |
 | Block a browser, page stops loading | Works |
 | Unblock while the firewall is on, page loads again | Works |
 | Log attempts with the app and the destination | Works |

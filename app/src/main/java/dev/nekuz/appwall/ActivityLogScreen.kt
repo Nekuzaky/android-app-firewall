@@ -58,7 +58,7 @@ class ActivityLogScreen : Activity() {
     private fun labelFor(uid: Int): String = labels.getOrPut(uid) {
         runCatching {
             val packageName = packageManager.getPackagesForUid(uid)?.firstOrNull()
-            packageName?.let { packageManager.getApplicationInfo(it, 0).loadLabel(packageManager).toString() }
+            packageName?.let { Labels.clean(packageManager.getApplicationInfo(it, 0).loadLabel(packageManager), it) }
         }.getOrNull() ?: getString(R.string.log_unknown_app)
     }
 
