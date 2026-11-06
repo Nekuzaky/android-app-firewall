@@ -70,9 +70,15 @@ App visibility is limited to apps with a launcher icon through a `<queries>` dec
 
 Gradle 8.11 does not support the Java 25 runtime bundled with recent Android Studio versions, so use a separate JDK 21.
 
-## Build and install
+## Download
 
-There are no prebuilt releases yet, so you need to build the app from source.
+Download the signed APK from the [latest release](https://github.com/Nekuzaky/android-app-firewall/releases/latest) and open it on your phone. Android may ask you to allow installs from the app you opened it with.
+
+The release notes list the SHA-256 checksum of the APK and of its signing certificate.
+
+## Build from source
+
+A build signed with your own key cannot install over the release APK. Uninstall the app first, which removes its rules.
 
 ```bash
 git clone https://github.com/Nekuzaky/android-app-firewall.git
