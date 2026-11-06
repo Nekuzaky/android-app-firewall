@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AppWall</string>
+    <string name="back">Back</string>
+    <string name="info">About AppWall</string>
+    <string name="activity">Blocked attempts</string>
+    <string name="close">Close</string>
+    <string name="clear">Clear</string>
+
+    <string name="status_on">Firewall on</string>
+    <string name="status_off">Firewall off</string>
+    <plurals name="blocked_count">
+        <item quantity="one">%d app blocked</item>
+        <item quantity="other">%d apps blocked</item>
+    </plurals>
+    <string name="action_turn_on">Turn on</string>
+    <string name="action_turn_off">Turn off</string>
+    <string name="search_hint">Search apps</string>
+    <string name="empty_apps">No apps found.</string>
+    <string name="empty_search">No results.</string>
+    <string name="blocked_tag">Blocked</string>
+    <string name="start_refused">Android did not allow the firewall to start.</string>
+
+    <string name="empty_log">No blocked attempts yet. Only apps you block appear here.</string>
+    <string name="log_unknown_app">Unknown app</string>
+    <string name="log_attempts">%1$d attempts · %2$s</string>
+    <string name="log_dns_lookup">%1$s (DNS lookup)</string>
+    <string name="log_note">Stored in memory only and erased when the firewall restarts.</string>
+
+    <string name="info_message">AppWall cuts Internet access for the apps you choose. It has no Internet permission and no ads or analytics.\n\nOnly blocked apps go through its local VPN, where their traffic is dropped. All other apps bypass it, so AppWall never sees their traffic.\n\nIt lists connection attempts from blocked apps. It cannot show where allowed apps connect.\n\nIf AppWall stops, blocked apps get their Internet access back. It restarts after a phone restart or an update. Only one VPN can run per profile, and each work profile needs its own copy of AppWall.\n\nDo not turn on \"Block connections without VPN\" for AppWall: it would cut the network for every app.</string>
+</resources>
